@@ -198,9 +198,27 @@ app.post("/complaints", async (req, res) => {
   res.json(c);
 });
 
+// app.get("/complaints/:id", async (req, res) => {
+//   const c = await Complaint.findById(req.params.id);
+//   res.json(c || { status: "Not found" });
+// });
 app.get("/complaints/:id", async (req, res) => {
-  const c = await Complaint.findById(req.params.id);
-  res.json(c || { status: "Not found" });
+    try {
+        const c = await Complaint.findById(req.params.id);
+
+        if (!c) {
+            return res.json({
+                status: "Complaint not found"
+            });
+        }
+
+        res.json(c);
+
+    } catch (error) {
+        res.json({
+            status: "Invalid ID"
+        });
+    }
 });
 
 app.get("/allcomplaints", verifyAdmin, async (req, res) => {
