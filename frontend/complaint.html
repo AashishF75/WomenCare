@@ -133,7 +133,7 @@ font-weight:bold;
 
 <script>
 
-const api = "http://localhost:3000";
+const api = "";
 
 const form = document.getElementById("form");
 
@@ -149,7 +149,7 @@ description: document.getElementById("desc").value
 
 try{
 
-const res = await fetch(api + "/complaints",{
+const res = await fetch(api + "/complaints", {
 
 method:"POST",
 headers:{
@@ -158,6 +158,7 @@ headers:{
 body:JSON.stringify(data)
 
 });
+
 
 const result = await res.json();
 
