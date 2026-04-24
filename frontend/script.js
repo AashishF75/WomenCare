@@ -50,42 +50,40 @@ alert("Error submitting complaint");
 
 /* ---------------- TRACK COMPLAINT ---------------- */
 
-async function track(){
+const api = "https://womencare.onrender.com";
 
-const id = document.getElementById("cid").value.trim();
+async function track() {
+    const id = document.getElementById("cid").value.trim();
 
-if(!id){
-alert("Enter Complaint ID");
-return;
-}
+    if (!id) {
+        alert("Enter Complaint ID");
+        return;
+    }
 
-try{
+    try {
+        const res = await fetch(api + "/complaints/" + id);
+        const data = await res.json();
 
-const res = await fetch(api + "/complaints/" + id);
+        if (
+            !data ||
+            data.status === "Invalid ID" ||
+            data.status === "Complaint not found"
+        ) {
+            document.getElementById("result").innerText = "Complaint not found";
+            return;
+        }
 
-const data = await res.json();
-
-if(!data || data.status === "Invalid ID" || data.status === "Complaint not found"){
-
-document.getElementById("result").innerText = "Complaint not found";
-return;
-
-}
-
-document.getElementById("result").innerHTML = `
-<h3>Complaint Details</h3>
-<p><b>Name:</b> ${data.name}</p>
-<p><b>Email:</b> ${data.email}</p>
-<p><b>Complaint:</b> ${data.description}</p>
-<p><b>Status:</b> ${data.status}</p>
-`;
-
-}catch(err){
-
-document.getElementById("result").innerText = "Error fetching complaint";
-
-}
-
+        document.getElementById("result").innerHTML = `
+            <h3>Complaint Details</h3>
+            <p><b>Name:</b> ${data.name}</p>
+            <p><b>Email:</b> ${data.email}</p>
+            <p><b>Complaint:</b> ${data.description}</p>
+            <p><b>Status:</b> ${data.status}</p>
+        `;
+    } catch (err) {
+        document.getElementById("result").innerText = "Error fetching complaint";
+        console.log(err);
+    }
 }
 
 
