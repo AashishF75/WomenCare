@@ -1,530 +1,83 @@
-// const express = require("express");
-// const cors = require("cors");
-// const mongoose = require("./db");
-// /* Twilio removed */
-// const multer = require("multer");
-// const jwt = require("jsonwebtoken");
-// const bcrypt = require("bcryptjs");
-// const cloudinary = require("cloudinary").v2;
-// const path = require("path");
+const api = "https://womencare.onrender.com";
 
-// /* SOCKET.IO */
-// const http = require("http");
-// const { Server } = require("socket.io");
+/* ---------------- SUBMIT COMPLAINT ---------------- */
 
-// const app = express();
-// const server = http.createServer(app);
+const form = document.getElementById("form");
 
-// const io = new Server(server, {
-//   cors: { origin: "*" }
-// });
+if (form) {
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-// app.use(cors());
-// app.use(express.json());
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const description = document.getElementById("desc").value.trim();
 
-// /* ✅ FIXED FRONTEND PATH */
-// app.use(express.static(path.join(__dirname, "../frontend")));
-// app.use("/image", express.static(path.join(__dirname, "../image")));
+        if (!name || !email || !description) {
+            alert("Please fill all fields");
+            return;
+        }
 
-// /* ---------------- CLOUDINARY ---------------- */
+        const data = { name, email, description };
 
-// cloudinary.config({
-//   cloud_name: "dmsovjhso",
-//   api_key: "713766388456354",
-//   api_secret: "YOUR_CLOUDINARY_API_SECRET"
-// });
+        try {
+            const res = await fetch(api + "/complaints", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
 
-// /* ---------------- SECRET ---------------- */
+            const result = await res.json();
 
-// const SECRET = "women-safety-secret";
+            alert("Complaint Submitted!\nComplaint ID: " + result._id);
 
-// /* ---------------- ADMIN ---------------- */
+            form.reset();
 
-// const adminUser = {
-//   username: "aashish",
-//   password: bcrypt.hashSync("admin@123", 10)
-// };
-
-// app.post("/admin-login", async (req, res) => {
-//   const { username, password } = req.body;
-
-//   if (username !== adminUser.username) {
-//     return res.json({ success: false });
-//   }
-
-//   const valid = await bcrypt.compare(password, adminUser.password);
-
-//   if (!valid) {
-//     return res.json({ success: false });
-//   }
-
-//   const token = jwt.sign({ user: "admin" }, SECRET, { expiresIn: "2h" });
-
-//   res.json({ success: true, token });
-// });
-
-// /* ---------------- VERIFY ---------------- */
-
-// function verifyAdmin(req, res, next) {
-//   const token = req.headers.authorization;
-
-//   if (!token) {
-//     return res.status(401).json({ message: "Unauthorized" });
-//   }
-
-//   try {
-//     jwt.verify(token, SECRET);
-//     next();
-//   } catch {
-//     res.status(403).json({ message: "Invalid token" });
-//   }
-// }
-
-// /* ---------------- SOCKET ---------------- */
-
-// io.on("connection", () => {
-//   console.log("Admin connected");
-// });
-
-// /* ---------------- STORAGE ---------------- */
-
-// let sosAlerts = [];
-// let recordings = [];
-
-// /* ---------------- MULTER ---------------- */
-
-// const upload = multer({ dest: "temp/" });
-
-// /* ================== ✅ FIXED UPLOAD ================== */
-
-// app.post("/upload-recording", upload.single("video"), async (req, res) => {
-//   try {
-//     console.log("📥 Upload request received");
-
-//     if (!req.file) {
-//       console.log("❌ No file received");
-//       return res.status(400).json({ error: "No video file" });
-//     }
-
-//     console.log("📦 File:", req.file.path);
-
-//     const location = req.body.location || "Not provided";
-
-//     const result = await cloudinary.uploader.upload(req.file.path, {
-//       resource_type: "video"
-//     });
-
-//     console.log("☁️ Uploaded:", result.secure_url);
-
-//     const record = {
-//       videoUrl: result.secure_url,
-//       location,
-//       time: new Date()
-//     };
-
-//     recordings.push(record);
-
-//     console.log("✅ Saved. Total recordings:", recordings.length);
-
-//     res.json({
-//       message: "Recording uploaded",
-//       record
-//     });
-
-//   } catch (err) {
-//     console.log("❌ Upload error:", err.message);
-//     res.status(500).json({ error: "Upload failed" });
-//   }
-// });
-
-// /* ---------------- GET RECORDINGS ---------------- */
-
-// app.get("/all-recordings", verifyAdmin, (req, res) => {
-//   res.json(recordings);
-// });
-
-// /* ---------------- SOS ---------------- */
-
-// app.post("/sos", async (req, res) => {
-//   try {
-//     const { latitude, longitude } = req.body;
-
-//     if (!latitude || !longitude) {
-//       return res.status(400).json({ error: "Location missing" });
-//     }
-
-//     const link = `https://maps.google.com/?q=${latitude},${longitude}`;
-
-//     const alert = {
-//       id: sosAlerts.length + 1,
-//       latitude,
-//       longitude,
-//       locationLink: link,
-//       time: new Date()
-//     };
-
-//     sosAlerts.push(alert);
-
-//     io.emit("newSOS", alert);
-
-//     res.json({ message: "SOS sent", alert });
-
-//   } catch (err) {
-//     console.log("❌ SOS error:", err.message);
-//     res.status(500).json({ error: "Failed" });
-//   }
-// });
-
-// /* ---------------- GET SOS ---------------- */
-
-// app.get("/sos-alerts", verifyAdmin, (req, res) => {
-//   res.json(sosAlerts);
-// });
-
-// /* ---------------- COMPLAINTS ---------------- */
-
-// const complaintSchema = new mongoose.Schema({
-//   name: String,
-//   email: String,
-//   description: String,
-//   status: { type: String, default: "Pending" }
-// });
-
-// const Complaint = mongoose.model("Complaint", complaintSchema);
-
-// app.post("/complaints", async (req, res) => {
-//   const c = new Complaint(req.body);
-//   await c.save();
-//   res.json(c);
-// });
-
-// // app.get("/complaints/:id", async (req, res) => {
-// //   const c = await Complaint.findById(req.params.id);
-// //   res.json(c || { status: "Not found" });
-// // });
-// app.get("/complaints/:id", async (req, res) => {
-//     try {
-//         const c = await Complaint.findById(req.params.id);
-
-//         if (!c) {
-//             return res.json({
-//                 status: "Complaint not found"
-//             });
-//         }
-
-//         res.json(c);
-
-//     } catch (error) {
-//         res.json({
-//             status: "Invalid ID"
-//         });
-//     }
-// });
-
-// app.get("/allcomplaints", verifyAdmin, async (req, res) => {
-//   res.json(await Complaint.find());
-// });
-
-// app.put("/solve/:id", verifyAdmin, async (req, res) => {
-//   await Complaint.findByIdAndUpdate(req.params.id, { status: "Solved" });
-//   res.json({ message: "Solved" });
-// });
-
-// /* ---------------- SERVER ---------------- */
-
-// const PORT = 3000;
-
-// server.listen(PORT, () => {
-//   console.log("🚀 Server running on port " + PORT);
-// });
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("./db");
-/* Twilio removed */
-const multer = require("multer");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const cloudinary = require("cloudinary").v2;
-const path = require("path");
-
-/* SOCKET.IO */
-const http = require("http");
-const { Server } = require("socket.io");
-
-const app = express();
-const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: { origin: "*" }
-});
-
-app.use(cors());
-app.use(express.json());
-
-/* FRONTEND + STATIC FILES */
-app.use(express.static(path.join(__dirname, "../frontend")));
-app.use("/image", express.static(path.join(__dirname, "../image")));
-
-/* ---------------- CLOUDINARY ---------------- */
-
-cloudinary.config({
-  cloud_name: "dmsovjhso",
-  api_key: "713766388456354",
-  api_secret: "YOUR_CLOUDINARY_API_SECRET"
-});
-
-/* ---------------- SECRET ---------------- */
-
-const SECRET = "women-safety-secret";
-
-/* ---------------- ADMIN ---------------- */
-
-const adminUser = {
-  username: "aashish",
-  password: bcrypt.hashSync("admin@123", 10)
-};
-
-app.post("/admin-login", async (req, res) => {
-  const { username, password } = req.body;
-
-  if (username !== adminUser.username) {
-    return res.json({ success: false });
-  }
-
-  const valid = await bcrypt.compare(password, adminUser.password);
-
-  if (!valid) {
-    return res.json({ success: false });
-  }
-
-  const token = jwt.sign(
-    { user: "admin" },
-    SECRET,
-    { expiresIn: "2h" }
-  );
-
-  res.json({
-    success: true,
-    token
-  });
-});
-
-/* ---------------- VERIFY ADMIN ---------------- */
-
-function verifyAdmin(req, res, next) {
-  const token = req.headers.authorization;
-
-  if (!token) {
-    return res.status(401).json({
-      message: "Unauthorized"
+        } catch (err) {
+            alert("Error submitting complaint");
+            console.log(err);
+        }
     });
-  }
-
-  try {
-    jwt.verify(token, SECRET);
-    next();
-  } catch {
-    res.status(403).json({
-      message: "Invalid token"
-    });
-  }
 }
 
-/* ---------------- SOCKET ---------------- */
 
-io.on("connection", () => {
-  console.log("Admin connected");
-});
+/* ---------------- TRACK COMPLAINT ---------------- */
 
-/* ---------------- STORAGE ---------------- */
+async function track() {
+    const cid = document.getElementById("cid");
 
-let sosAlerts = [];
-let recordings = [];
+    if (!cid) return;
 
-/* ---------------- MULTER ---------------- */
+    const id = cid.value.trim();
 
-const upload = multer({
-  dest: "temp/"
-});
-
-/* ---------------- VIDEO UPLOAD ---------------- */
-
-app.post("/upload-recording", upload.single("video"), async (req, res) => {
-  try {
-    console.log("Upload request received");
-
-    if (!req.file) {
-      return res.status(400).json({
-        error: "No video file"
-      });
+    if (!id) {
+        alert("Enter Complaint ID");
+        return;
     }
 
-    const location = req.body.location || "Not provided";
+    try {
+        const res = await fetch(api + "/complaints/" + id);
+        const data = await res.json();
 
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      resource_type: "video"
-    });
+        if (!data || data.status === "Not found") {
+            document.getElementById("result").innerText = "Complaint not found";
+            return;
+        }
 
-    const record = {
-      videoUrl: result.secure_url,
-      location,
-      time: new Date()
-    };
-
-    recordings.push(record);
-
-    res.json({
-      message: "Recording uploaded",
-      record
-    });
-
-  } catch (err) {
-    console.log("Upload error:", err.message);
-
-    res.status(500).json({
-      error: "Upload failed"
-    });
-  }
-});
-
-/* ---------------- GET RECORDINGS ---------------- */
-
-app.get("/all-recordings", verifyAdmin, (req, res) => {
-  res.json(recordings);
-});
-
-/* ---------------- SOS ---------------- */
-
-app.post("/sos", async (req, res) => {
-  try {
-    const { latitude, longitude } = req.body;
-
-    if (!latitude || !longitude) {
-      return res.status(400).json({
-        error: "Location missing"
-      });
+        document.getElementById("result").innerHTML = `
+            <h3>Complaint Details</h3>
+            <p><b>Name:</b> ${data.name}</p>
+            <p><b>Email:</b> ${data.email}</p>
+            <p><b>Complaint:</b> ${data.description}</p>
+            <p><b>Status:</b> ${data.status}</p>
+        `;
+    } catch (err) {
+        document.getElementById("result").innerText = "Error fetching complaint";
+        console.log(err);
     }
+}
 
-    const link = `https://maps.google.com/?q=${latitude},${longitude}`;
 
-    const alert = {
-      id: sosAlerts.length + 1,
-      latitude,
-      longitude,
-      locationLink: link,
-      time: new Date()
-    };
-
-    sosAlerts.push(alert);
-
-    io.emit("newSOS", alert);
-
-    res.json({
-      message: "SOS sent",
-      alert
-    });
-
-  } catch (err) {
-    console.log("SOS error:", err.message);
-
-    res.status(500).json({
-      error: "Failed"
-    });
-  }
-});
-
-/* ---------------- GET SOS ---------------- */
-
-app.get("/sos-alerts", verifyAdmin, (req, res) => {
-  res.json(sosAlerts);
-});
-
-/* ---------------- COMPLAINTS ---------------- */
-
-const complaintSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  description: String,
-  status: {
-    type: String,
-    default: "Pending"
-  }
-});
-
-const Complaint = mongoose.model("Complaint", complaintSchema);
-
-/* SUBMIT COMPLAINT */
-
-app.post("/complaints", async (req, res) => {
-  try {
-    const complaint = new Complaint({
-      name: req.body.name,
-      email: req.body.email,
-      description: req.body.description
-    });
-
-    await complaint.save();
-
-    res.json(complaint);
-
-  } catch (err) {
-    console.log("Complaint save error:", err.message);
-
-    res.status(500).json({
-      status: "Save failed"
-    });
-  }
-});
-
-/* TRACK COMPLAINT */
-
-app.get("/complaints/:id", async (req, res) => {
-  try {
-    const complaint = await Complaint.findById(req.params.id);
-
-    if (!complaint) {
-      return res.json({
-        status: "Complaint not found"
-      });
-    }
-
-    res.json(complaint);
-
-  } catch (err) {
-    console.log("Track complaint error:", err.message);
-
-    res.json({
-      status: "Invalid ID"
-    });
-  }
-});
-
-/* GET ALL COMPLAINTS */
-
-app.get("/allcomplaints", verifyAdmin, async (req, res) => {
-  const complaints = await Complaint.find();
-  res.json(complaints);
-});
-
-/* SOLVE COMPLAINT */
-
-app.put("/solve/:id", verifyAdmin, async (req, res) => {
-  await Complaint.findByIdAndUpdate(
-    req.params.id,
-    {
-      status: "Solved"
-    }
-  );
-
-  res.json({
-    message: "Solved"
-  });
-});
-
-/* ---------------- SERVER ---------------- */
-
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
-});
+/* make function available globally for button onclick */
+window.track = track;
