@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Admin Dashboard</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+body{
+font-family:Arial;
+}
+
+#map{
+height:400px;
+width:80%;
+margin:auto;
+}
+
+button{
+padding:6px 10px;
+cursor:pointer;
+}
+
+.logout{
+float:right;
+background:red;
+color:white;
+border:none;
+padding:8px;
+}
+
+.record-box{
+border:1px solid #ccc;
+padding:15px;
+margin-bottom:20px;
+width:420px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>Admin Dashboard</h1>
+
+<button class="logout" onclick="logout()">Logout</button>
+
+<h2>Complaints</h2>
+
+<table border="1">
+<thead>
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Complaint</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+</table>
+
+<h2>Panic Camera Recordings</h2>
+<div id="recordings"></div>
+
+<h2>SOS Alerts Map</h2>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+const api = window.location.origin;
+const token = localStorage.getItem("token");
+
+if(!token){
+window.location.href="admin-login.html";
+}
+
+/* VERIFY */
+async function verifyLogin(){
+try{
+const res = await fetch(api + "/allcomplaints",{headers:{Authorization:token}});
+if(res.status===401 || res.status===403){
+localStorage.removeItem("token");
+window.location.href="admin-login.html";
+}
+}catch{
+localStorage.removeItem("token");
+window.location.href="admin-login.html";
+}
+}
+verifyLogin();
+
+/* LOAD COMPLAINTS */
+async function loadComplaints(){
+const res = await fetch(api + "/allcomplaints",{headers:{Authorization:token}});
+const data = await res.json();
+
+const table = document.getElementById("table");
+table.innerHTML="";
+
+data.forEach(c=>{
+table.innerHTML += `
+<tr>
+<td>${c.name}</td>
+<td>${c.email}</td>
+<td>${c.description}</td>
+<td>${c.status}</td>
+<td><button onclick="solve('${c._id}')">Mark Solved</button></td>
+</tr>`;
+});
+}
+loadComplaints();
+
+/* SOLVE */
+async function solve(id){
+await fetch(api + "/solve/" + id,{
+method:"PUT",
+headers:{Authorization:token}
+});
+alert("Solved");
+loadComplaints();
+}
+
+/* MAP INIT */
+var map = L.map('map').setView([20.5937,78.9629],5);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+maxZoom:19
+}).addTo(map);
+
+/* ✅ FIXED SOS LOAD */
+async function loadSOS(){
+const res = await fetch(api + "/sos-alerts",{headers:{Authorization:token}});
+const alerts = await res.json();
+
+alerts.forEach(a=>{
+
+let lat, lon;
+
+if(a.latitude && a.longitude){
+lat = parseFloat(a.latitude);
+lon = parseFloat(a.longitude);
+}
+else if(a.location){
+const parts = a.location.split(",");
+lat = parseFloat(parts[0]);
+lon = parseFloat(parts[1]);
+}
+
+if(lat && lon){
+
+L.marker([lat, lon])
+.addTo(map)
+.bindPopup("SOS Alert<br>"+new Date(a.time).toLocaleString());
+
+// ✅ center map properly
+map.setView([lat, lon], 15);
+
+}
+
+});
+}
+loadSOS();
+
+/* ✅ FIXED RECORDINGS */
+async function loadRecordings(){
+
+const res = await fetch(api + "/all-recordings",{headers:{Authorization:token}});
+const data = await res.json();
+
+const box = document.getElementById("recordings");
+box.innerHTML="";
+
+if(data.length===0){
+box.innerHTML="<p>No recordings available</p>";
+return;
+}
+
+data.forEach(r=>{
+
+box.innerHTML += `
+<div class="record-box">
+
+<p><b>Location:</b> ${r.location || "N/A"}</p>
+<p><b>Time:</b> ${new Date(r.time).toLocaleString()}</p>
+
+<video width="400" controls playsinline>
+  <source src="${r.videoUrl}" type="video/webm">
+</video>
+
+</div>
+`;
+
+});
+}
+loadRecordings();
+
+/* REALTIME */
+const socket = io(api);
+
+socket.on("newSOS",(alertData)=>{
+
+alert("🚨 SOS ALERT!");
+
+const sound = new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg");
+sound.play();
+
+if(alertData.latitude && alertData.longitude){
+
+const lat = parseFloat(alertData.latitude);
+const lon = parseFloat(alertData.longitude);
+
+L.marker([lat, lon])
+.addTo(map)
+.bindPopup("NEW SOS<br>"+new Date(alertData.time).toLocaleString())
+.openPopup();
+
+// center map
+map.setView([lat, lon], 15);
+
+}
+
+});
+
+/* LOGOUT */
+function logout(){
+localStorage.removeItem("token");
+window.location.href="admin-login.html";
+}
+
+</script>
+
+</body>
+
+</html>

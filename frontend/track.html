@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<title>Track Complaint</title>
+
+<style>
+
+body{
+font-family: Arial, sans-serif;
+background: linear-gradient(135deg,#1e3c72,#2a5298);
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+/* Main Card */
+
+.container{
+background:white;
+padding:40px;
+border-radius:12px;
+box-shadow:0 10px 30px rgba(0,0,0,0.25);
+text-align:center;
+width:380px;
+}
+
+/* Heading */
+
+h1{
+color:#2c3e50;
+margin-bottom:25px;
+}
+
+/* Input */
+
+input{
+width:100%;
+padding:12px;
+border:1px solid #ccc;
+border-radius:6px;
+font-size:14px;
+outline:none;
+margin-bottom:15px;
+transition:0.3s;
+}
+
+input:focus{
+border-color:#3498db;
+box-shadow:0 0 6px rgba(52,152,219,0.5);
+}
+
+/* Button */
+
+button{
+width:100%;
+padding:12px;
+background:#3498db;
+color:white;
+border:none;
+border-radius:6px;
+font-size:16px;
+cursor:pointer;
+transition:0.3s;
+}
+
+button:hover{
+background:#2980b9;
+transform:translateY(-2px);
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Result */
+
+#result{
+margin-top:20px;
+font-weight:bold;
+color:#2c3e50;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Track Complaint</h1>
+
+<input type="text" id="cid" placeholder="Enter Complaint ID">
+
+<button onclick="track()">Check</button>
+
+<div id="result"></div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<title>Register Complaint</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+body{
+font-family: Arial, sans-serif;
+background:linear-gradient(135deg,#1e3c72,#2a5298);
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+/* Main Card */
+
+.container{
+background:white;
+padding:35px;
+border-radius:12px;
+box-shadow:0 10px 30px rgba(0,0,0,0.25);
+width:380px;
+text-align:center;
+}
+
+/* Heading */
+
+h2{
+color:#2c3e50;
+margin-bottom:25px;
+}
+
+/* Input group */
+
+.input-group{
+display:flex;
+align-items:center;
+border:1px solid #ccc;
+border-radius:6px;
+margin-bottom:15px;
+padding:8px;
+background:#f9f9f9;
+}
+
+.input-group i{
+margin-right:10px;
+color:#555;
+}
+
+.input-group input,
+.input-group textarea{
+border:none;
+outline:none;
+width:100%;
+background:transparent;
+font-size:14px;
+}
+
+/* textarea */
+
+textarea{
+resize:none;
+height:80px;
+}
+
+/* Button */
+
+button{
+margin-top:10px;
+width:100%;
+padding:10px;
+background:#e74c3c;
+color:white;
+border:none;
+border-radius:6px;
+font-size:16px;
+cursor:pointer;
+transition:0.3s;
+}
+
+button:hover{
+background:#c0392b;
+}
+
+/* Message */
+
+#message{
+margin-top:15px;
+font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Register Complaint</h2>
+
+<form id="form">
+
+<div class="input-group">
+<i class="fa fa-user"></i>
+<input type="text" id="name" placeholder="Name" required>
+</div>
+
+<div class="input-group">
+<i class="fa fa-envelope"></i>
+<input type="email" id="email" placeholder="Email" required>
+</div>
+
+<div class="input-group">
+<i class="fa fa-comment"></i>
+<textarea id="desc" placeholder="Complaint" required></textarea>
+</div>
+
+<button type="submit">Submit Complaint</button>
+
+</form>
+
+<p id="message"></p>
+
+</div>
+
+<script>
+
+const api = "http://localhost:3000";
+
+const form = document.getElementById("form");
+
+form.addEventListener("submit", async function(e){
+
+e.preventDefault();
+
+const data = {
+name: document.getElementById("name").value,
+email: document.getElementById("email").value,
+description: document.getElementById("desc").value
+};
+
+try{
+
+const res = await fetch(api + "/complaints",{
+
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(data)
+
+});
+
+const result = await res.json();
+
+document.getElementById("message").innerText =
+"Complaint submitted successfully. ID: " + result._id;
+
+form.reset();
+
+}catch(err){
+
+document.getElementById("message").innerText =
+"Error submitting complaint";
+
+}
+
+});
+
+</script>
+
+</body>
+</html>

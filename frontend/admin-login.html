@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<title>Admin Login</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#f4f4f4;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.login-box{
+background:white;
+padding:30px;
+border-radius:8px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+width:320px;
+text-align:center;
+}
+
+input{
+width:90%;
+padding:10px;
+margin:10px 0;
+border:1px solid #ccc;
+border-radius:5px;
+}
+
+button{
+padding:10px 20px;
+background:#007bff;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
+
+button:hover{
+background:#0056b3;
+}
+
+#msg{
+margin-top:10px;
+font-size:14px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="login-box">
+
+<h2>Admin Login</h2>
+
+<input type="text" id="username" placeholder="Username">
+
+<input type="password" id="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+
+</div>
+
+<script>
+
+document.addEventListener("keydown",function(e){
+if(e.key === "Enter"){
+login();
+}
+});
+
+async function login(){
+
+const username = document.getElementById("username").value.trim();
+const password = document.getElementById("password").value.trim();
+const msg = document.getElementById("msg");
+
+if(!username || !password){
+msg.style.color="red";
+msg.innerText="Please enter username and password";
+return;
+}
+
+msg.style.color="black";
+msg.innerText="Checking login...";
+
+try{
+
+const res = await fetch("http://localhost:3000/admin-login",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({username,password})
+});
+
+const data = await res.json();
+
+if(data.success){
+
+localStorage.setItem("token",data.token);
+
+msg.style.color="green";
+msg.innerText="Login successful. Redirecting...";
+
+setTimeout(()=>{
+window.location.href="admin.html";
+},800);
+
+}else{
+
+msg.style.color="red";
+msg.innerText="Invalid username or password";
+
+}
+
+}catch(err){
+
+msg.style.color="red";
+msg.innerText="Server not reachable. Is backend running?";
+
+console.error(err);
+
+}
+
+}
+
+</script>
+
+</body>
+
+</html>
