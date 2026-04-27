@@ -41,8 +41,8 @@ const SECRET = "women-safety-secret";
 /* ---------------- ADMIN ---------------- */
 
 const adminUser = {
-  username: "aashish",
-  password: bcrypt.hashSync("admin@123", 10)
+  username: "Aashish",
+  password: bcrypt.hashSync("Nabbu@123", 10)
 };
 
 app.post("/admin-login", async (req, res) => {
