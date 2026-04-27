@@ -29,11 +29,10 @@ app.use("/image", express.static(path.join(__dirname, "../image")));
 /* ---------------- CLOUDINARY ---------------- */
 
 cloudinary.config({
-  cloud_name: "dmsovjhso",
-  api_key: "713766388456354",
-  api_secret: "YOUR_CLOUDINARY_API_SECRET"
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
-
 /* ---------------- SECRET ---------------- */
 
 const SECRET = "women-safety-secret";
